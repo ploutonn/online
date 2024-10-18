@@ -799,10 +799,12 @@ L.Control.JSDialog = L.Control.extend({
 		// focus on element outside view will move viewarea leaving blank space on the bottom
 		if (innerData.action_type === 'grab_focus') {
 			var control = dialogContainer.querySelector('[id=\'' + innerData.control_id + '\']');
-			var controlPosition = control.getBoundingClientRect();
-			if (controlPosition.bottom > window.innerHeight ||
-				controlPosition.right > window.innerWidth) {
-				this.centerDialogPosition(dialog); // will center it
+			if (control) {
+				var controlPosition = control.getBoundingClientRect();
+				if (controlPosition.bottom > window.innerHeight ||
+					controlPosition.right > window.innerWidth) {
+					this.centerDialogPosition(dialog); // will center it
+				}
 			}
 		}
 
