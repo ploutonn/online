@@ -2377,7 +2377,7 @@ void Document::drainCallbacks()
         _websocketHandler->flush();
 }
 
-void Document::drainQueue()
+void Document::drainQueue(bool nothingImportantPending)
 {
     if (UnitKit::get().filterDrainQueue())
     {
@@ -2441,7 +2441,7 @@ void Document::drainQueue()
             }
         }
 
-        if (processInputEnabled() && !isLoadOngoing() &&
+        if (nothingImportantPending && processInputEnabled() && !isLoadOngoing() &&
             !isBackgroundSaveProcess() && _queue->getTileQueueSize() > 0)
         {
             std::vector<TileCombined> tileRequests = _queue->popWholeTileQueue();
@@ -2449,8 +2449,11 @@ void Document::drainQueue()
             // Put requests that include tiles in the visible area to the front to handle those first
             std::partition(tileRequests.begin(), tileRequests.end(), [this](const TileCombined& req) {
                 return isTileRequestInsideVisibleArea(req); });
-            for (auto& tileCombined : tileRequests)
-                renderTiles(tileCombined);
+            fprintf(stderr, "render a pending tile request in otherwise unused time\n");
+            renderTiles(tileRequests.front());
+            tileRequests.erase(tileRequests.begin());
+            for (TileCombined& tileCombined : tileRequests)
+                _queue->pushTileQueue(tileCombined.getTiles());
         }
     }
     catch (const std::exception& exc)
@@ -2819,12 +2822,12 @@ std::shared_ptr<KitSocketPoll> KitSocketPoll::create() // static
 }
 
 // process pending message-queue events.
-void KitSocketPoll::drainQueue()
+void KitSocketPoll::drainQueue(bool nothingImportantPending)
 {
     SigUtil::checkDumpGlobalState(dump_kit_state);
 
     if (_document)
-        _document->drainQueue();
+        _document->drainQueue(nothingImportantPending);
 }
 
 // called from inside poll, inside a wakeup
@@ -2880,6 +2883,8 @@ int KitSocketPoll::kitPoll(int timeoutMicroS)
     // handle processtoidle waiting optimization
     bool checkForIdle = ProcessToIdleDeadline >= startTime;
 
+    bool renderTilesWithUnusedTime = false;
+
     if (timeoutMicroS < 0)
     {
         // Flush at most 1 + maxExtraEvents, or return when nothing left.
@@ -2896,14 +2901,24 @@ int KitSocketPoll::kitPoll(int timeoutMicroS)
         do
         {
             int realTimeout = timeoutMicroS;
-            if (_document && _document->needsQuickPoll())
+            bool needsQuickPoll = _document && _document->needsQuickPoll();
+            bool hasPendingTiles = _document && _document->hasTileQueueItems();
+            if (needsQuickPoll || hasPendingTiles)
                 realTimeout = 0;
 
-            if (poll(std::chrono::microseconds(realTimeout)) <= 0)
+            int rc = poll(std::chrono::microseconds(realTimeout));
+            if (rc <= 0)
+            {
+                if (rc == 0 && timeoutMicroS > 0 && realTimeout == 0 && !needsQuickPoll && hasPendingTiles)
+                {
+                    fprintf(stderr, "core happy to wait for %d more us, breaking loop early because hasPendingTiles is true\n", timeoutMicroS);
+                    renderTilesWithUnusedTime = true;
+                }
                 break;
+            }
 
             const auto now = std::chrono::steady_clock::now();
-            drainQueue();
+            drainQueue(false);
 
             timeoutMicroS =
                 std::chrono::duration_cast<std::chrono::microseconds>(_pollEnd - now).count();
@@ -2926,7 +2941,7 @@ int KitSocketPoll::kitPoll(int timeoutMicroS)
             LOG_TRC("Poll of would not close gap - continuing");
     }
 
-    drainQueue();
+    drainQueue(renderTilesWithUnusedTime);
 
     if (_document)
         _document->trimAfterInactivity();

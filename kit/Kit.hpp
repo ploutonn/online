@@ -144,7 +144,7 @@ class KitSocketPoll final : public SocketPoll
 
 public:
     ~KitSocketPoll();
-    void drainQueue();
+    void drainQueue(bool nothingImportantPending);
 
     static void dumpGlobalState(std::ostream& oss);
     static std::shared_ptr<KitSocketPoll> create();
@@ -336,8 +336,9 @@ public:
     void queueMessage(const std::string &msg) { _queue->put(msg); }
     bool hasQueueItems() const { return _queue && !_queue->isEmpty(); }
     bool hasCallbacks() const { return _queue && _queue->callbackSize() > 0; }
+    bool hasTileQueueItems() const { return _queue && _queue->getTileQueueSize() > 0; }
 
-    /// Should we get through the SocketPoll fast to process queus ?
+    /// Should we get through the SocketPoll fast to process queues ?
     bool needsQuickPoll() const
     {
         if (hasCallbacks())
@@ -349,7 +350,7 @@ public:
 
     // poll is idle, are we ?
     void checkIdle();
-    void drainQueue();
+    void drainQueue(bool nothingImportantPending);
     void drainCallbacks();
 
     void dumpState(std::ostream& oss);
