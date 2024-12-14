@@ -182,6 +182,17 @@ $(DIST_FOLDER)/src/layer/tile/TileWorker.js: \
 		-DWORKER_JS=$(srcdir)/src/layer/tile/CanvasTileWorkerSrc.js \
 		$(srcdir)/src/layer/tile/CanvasTileWorker.js.m4 > $@
 
+$(DIST_FOLDER)/src/slideshow/SlideShowWorker.js: \
+	$(srcdir)/src/slideshow/SlideShowWorker.js.m4 \
+	$(srcdir)/src/slideshow/SlideShowWorkerSrc.js \
+	$(WORKER_NODE_MODULES_JS)
+
+	@echo "Generating SlideShowWorker.js..."
+	m4 -PE -DDEBUG=$(ENABLE_DEBUG) \
+		-DNODE_MODULES_JS=$(subst $(SPACE),$(COMMA),$(WORKER_NODE_MODULES_JS)) \
+		-DWORKER_JS=$(srcdir)/src/slideshow/SlideShowWorkerSrc.js \
+		$(srcdir)/src/slideshow/SlideShowWorker.js.m4 > $@
+
 NODE_MODULES_JS =\
 	$(if $(IS_SEPARATE),node_modules/hammerjs/hammer.js,node_modules/hammerjs/hammer.min.js) \
 	node_modules/dompurify/dist/purify.min.js \
@@ -573,7 +584,7 @@ COOL_TS_SRC = $(filter %.ts,$(COOL_JS_WEBORDER))
 
 # beware these are not helpfully ordered
 COOL_TS_JS_DST = $(patsubst src/%.ts,$(DIST_FOLDER)/src/%.js,$(COOL_TS_SRC))
-COOL_JS_DST = $(patsubst src/%.js,$(DIST_FOLDER)/src/%.js,$(COOL_JS_SRC)) $(COOL_TS_JS_DST) $(DIST_FOLDER)/src/layer/tile/TileWorker.js
+COOL_JS_DST = $(patsubst src/%.js,$(DIST_FOLDER)/src/%.js,$(COOL_JS_SRC)) $(COOL_TS_JS_DST) $(DIST_FOLDER)/src/layer/tile/TileWorker.js $(DIST_FOLDER)/src/slideshow/SlideShowWorker.js
 # should be no lingering / obsolete files:
 COOL_ASSERT_INTERSECT = $(filter $(COOL_JS_SRC), $(patsubst %.ts,%.js,$(COOL_TS_SRC)))
 
