@@ -338,6 +338,12 @@ class SlideShowPresenter {
 		canvas.style.margin = 0;
 		canvas.style.position = 'absolute';
 
+		this._setupCanvas(canvas);
+
+		return canvas;
+	}
+
+	_setupCanvas(canvas: HTMLCanvasElement) {
 		canvas.addEventListener(
 			'click',
 			this._slideShowNavigator.onClick.bind(this._slideShowNavigator),
@@ -354,14 +360,12 @@ class SlideShowPresenter {
 		} catch (error) {
 			this._slideRenderer = new SlideRenderer2d(canvas);
 		}
-
-		return canvas;
 	}
 
 	exitSlideshowWithWarning(): boolean {
 		// TODO 2D version for disabled webGL
 		if (this._slideRenderer._context.is2dGl()) return false;
-		new SlideShow.StaticTextRenderer(this._slideRenderer._context).display(
+		new StaticTextRenderer(this._slideRenderer._context).display(
 			_('Click to exit presentation...'),
 		);
 		return true;
@@ -465,6 +469,7 @@ class SlideShowPresenter {
 				<div id="overlay-in-window">
 					<span>${pauseText}</span>
 				</div>
+				<script type="text/javascript" src="src/slideshow/SlideShowWorker.js"></script>
 			</body>
 			</html>
 			`;
@@ -496,51 +501,6 @@ class SlideShowPresenter {
 		else return this._slideShowWindowProxy.document;
 	}
 
-	_requestPauseFrame() {
-		if (!document.hidden) return;
-
-		const logRefresh = function () {
-			console.debug(
-				'_requestPauseFrame: after onTabSwitch pause was activated',
-			);
-		};
-		requestAnimationFrame(logRefresh);
-	}
-
-	onTabSwitch() {
-		const windowDocument = this._getProxyDocumentNode().documentElement;
-
-		if (document.hidden) this._stylePauseOverlay(windowDocument, true);
-		else this._stylePauseOverlay(windowDocument, false);
-
-		this._requestPauseFrame();
-	}
-
-	enablePauseHandler() {
-		if (this._cypressSVGPresentationTest) return;
-
-		// allow rendering in paused mode in Firefox at least 1 per sec
-		// Chrome doesn't draw anything when main window is hidden
-		this._pauseRenderTimer = this._slideShowWindowProxy.setInterval(
-			this._requestPauseFrame.bind(this),
-			1000,
-		);
-
-		this._pauseEnterFunc = this.onTabSwitch.bind(this);
-
-		document.addEventListener('visibilitychange', this._pauseEnterFunc);
-	}
-
-	disablePauseHandler() {
-		if (this._cypressSVGPresentationTest) return;
-
-		document.removeEventListener('visibilitychange', this._pauseEnterFunc);
-		this._pauseEnterFunc = undefined;
-		if (this._slideShowWindowProxy) {
-			this._slideShowWindowProxy.clearInterval(this._pauseRenderTimer);
-		}
-	}
-
 	_doInWindowPresentation() {
 		const popupTitle =
 			_('Windowed Presentation: ') + this._map['wopi'].BaseFileName;
@@ -564,9 +524,7 @@ class SlideShowPresenter {
 			return;
 		}
 
-		this.enablePauseHandler();
-
-		this._getProxyDocumentNode().documentElement.innerHTML = htmlContent;
+		this._getProxyDocumentNode().write(htmlContent);
 		this._getProxyDocumentNode().close();
 		this._slideShowWindowProxy.focus();
 
@@ -581,13 +539,14 @@ class SlideShowPresenter {
 			false,
 		);
 
-		const body = this._getProxyDocumentNode().querySelector('#root-in-window');
-		this._presenterContainer = this._createPresenterHTML(
-			body,
-			window.screen.width,
-			window.screen.height,
-		);
-		this._slideShowCanvas.focus();
+		setTimeout(() => {
+			const body =
+				this._getProxyDocumentNode().querySelector('#root-in-window');
+			this._presenterContainer = body.querySelector('#presenter-container');
+			this._slideShowCanvas = body.querySelector('canvas');
+			this._setupCanvas(this._slideShowCanvas);
+			this._slideShowCanvas.focus();
+		}, 500);
 
 		this._slideShowWindowProxy.addEventListener(
 			'resize',
@@ -629,7 +588,6 @@ class SlideShowPresenter {
 	}
 
 	slideshowWindowCleanUp() {
-		this.disablePauseHandler();
 		clearInterval(this._windowCloseInterval);
 		this._slideShowNavigator.quit();
 		this._map.uiManager.closeSnackbar();
@@ -803,6 +761,9 @@ class SlideShowPresenter {
 
 		if (!this.getCanvas()) {
 			console.debug('onSlideShowInfo: no canvas available');
+			setTimeout(() => {
+				this.onSlideShowInfo(data);
+			}, 100);
 			return;
 		}
 
@@ -845,7 +806,7 @@ class SlideShowPresenter {
 		}
 
 		if (!this._slideCompositor) {
-			this._slideCompositor = new SlideShow.LayersCompositor(
+			this._slideCompositor = new LayersCompositor(
 				this,
 				this._metaPresentation,
 			);
