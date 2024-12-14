@@ -240,10 +240,10 @@ class LayerDrawing {
 		);
 
 		try {
-			this.layerRenderer = new SlideShow.LayerRendererGl(this.offscreenCanvas);
+			this.layerRenderer = new LayerRendererGl(this.offscreenCanvas);
 		} catch (error) {
 			console.log('LayerDrawing: WebGl offscreen rendering not supported');
-			this.layerRenderer = new SlideShow.LayerRenderer2d(this.offscreenCanvas);
+			this.layerRenderer = new LayerRenderer2d(this.offscreenCanvas);
 		}
 	}
 

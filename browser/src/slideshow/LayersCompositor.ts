@@ -30,7 +30,7 @@ class LayersCompositor extends SlideCompositor {
 	}
 
 	protected _addHooks() {
-		this.layerDrawing = new SlideShow.LayerDrawing(app.map, this);
+		this.layerDrawing = new LayerDrawing(app.map, this);
 		this.layerDrawing.addHooks();
 	}
 

@@ -155,55 +155,55 @@ function createTransition(
 			return BarWipeTransition(transitionParameters);
 
 		case TransitionType.PINWHEELWIPE:
-			return new SlideShow.WheelTransition(transitionParameters);
+			return new WheelTransition(transitionParameters);
 
 		case TransitionType.RANDOMBARWIPE:
-			return new SlideShow.BarsTransition(transitionParameters);
+			return new BarsTransition(transitionParameters);
 
 		case TransitionType.CHECKERBOARDWIPE:
-			return new SlideShow.CheckersTransition(transitionParameters);
+			return new CheckersTransition(transitionParameters);
 
 		case TransitionType.FOURBOXWIPE:
-			return new SlideShow.PlusTransition(transitionParameters);
+			return new PlusTransition(transitionParameters);
 
 		case TransitionType.IRISWIPE:
-			return SlideShow.IrisWipeTransition(transitionParameters);
+			return IrisWipeTransition(transitionParameters);
 
 		case TransitionType.ELLIPSEWIPE:
-			return SlideShow.EllipseWipeTransition(transitionParameters);
+			return EllipseWipeTransition(transitionParameters);
 
 		case TransitionType.FANWIPE:
-			return new SlideShow.WedgeTransition(transitionParameters);
+			return new WedgeTransition(transitionParameters);
 
 		case TransitionType.BLINDSWIPE:
-			return new SlideShow.VenetianTransition(transitionParameters);
+			return new VenetianTransition(transitionParameters);
 
 		case TransitionType.DISSOLVE:
-			return new SlideShow.SimpleDissolveTransition(transitionParameters);
+			return new SimpleDissolveTransition(transitionParameters);
 
 		case TransitionType.BARNDOORWIPE:
-			return new SlideShow.SplitTransition(transitionParameters);
+			return new SplitTransition(transitionParameters);
 
 		case TransitionType.WATERFALLWIPE:
-			return new SlideShow.DiagonalTransition(transitionParameters);
+			return new DiagonalTransition(transitionParameters);
 	}
 
 	if (isSlideTransition) {
 		switch (type) {
 			case TransitionType.FADE:
-				return new SlideShow.FadeTransition(transitionParameters);
+				return new FadeTransition(transitionParameters);
 
 			case TransitionType.SLIDEWIPE:
 				return SlideWipeTransition(transitionParameters);
 
 			case TransitionType.PUSHWIPE:
-				return SlideShow.PushWipeTransition(transitionParameters);
+				return PushWipeTransition(transitionParameters);
 
 			case TransitionType.MISCSHAPEWIPE:
-				return SlideShow.MicsShapeWipeTransition(transitionParameters);
+				return MicsShapeWipeTransition(transitionParameters);
 
 			case TransitionType.ZOOM:
-				return SlideShow.NewsFlashTransition(transitionParameters);
+				return NewsFlashTransition(transitionParameters);
 		}
 	}
 
@@ -211,5 +211,5 @@ function createTransition(
 		'Unknown transition type',
 		transitionParameters.transitionFilterInfo.transitionType,
 	);
-	return new SlideShow.NoTransition(transitionParameters);
+	return new NoTransition(transitionParameters);
 }
