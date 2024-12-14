@@ -12,5 +12,6 @@
         </div>
       </div>
     </div>
+    <script type="text/javascript" src="src/slideshow/SlideShowWorker.js"></script>
   </body>
 </html>
