@@ -421,34 +421,6 @@ class SlideShowPresenter {
 		this._canvasLoader = null;
 	}
 
-	private _stylePauseOverlay(windowDocument: HTMLElement, show: boolean) {
-		const overlay = windowDocument.querySelector(
-			'#overlay-in-window',
-		) as HTMLElement;
-
-		const display = show ? 'block' : 'none';
-
-		overlay.style.display = display;
-		overlay.style.position = 'fixed';
-
-		overlay.style.top = '0';
-		overlay.style.bottom = '0';
-		overlay.style.right = '0';
-		overlay.style.left = '0';
-
-		overlay.style.opacity = '65%';
-		overlay.style.backgroundColor = 'black';
-		overlay.style.color = 'white';
-
-		overlay.style.alignContent = 'center';
-		overlay.style.textAlign = 'center';
-		overlay.style.fontWeight = 'bolder';
-		overlay.style.fontSize = 'xxx-large';
-		overlay.style.fontFamily = 'sans';
-
-		overlay.style.userSelect = 'none';
-	}
-
 	_generateSlideWindowHtml(title: string) {
 		const sanitizer = document.createElement('div');
 		sanitizer.innerText = title;
@@ -516,7 +488,7 @@ class SlideShowPresenter {
 			this._getProxyDocumentNode().write('<html><body></body></html>');
 			this._getProxyDocumentNode().close();
 		} else {
-			this._slideShowWindowProxy = window.open('', '_blank', 'popup');
+			this._slideShowWindowProxy = window.open('./slideshow.html', '_blank', 'popup');
 		}
 
 		if (!this._slideShowWindowProxy) {
@@ -524,29 +496,28 @@ class SlideShowPresenter {
 			return;
 		}
 
-		this._getProxyDocumentNode().write(htmlContent);
-		this._getProxyDocumentNode().close();
 		this._slideShowWindowProxy.focus();
 
-		// set body styles
-		this._getProxyDocumentNode().body.style.margin = '0';
-		this._getProxyDocumentNode().body.style.padding = '0';
-		this._getProxyDocumentNode().body.style.height = '100%';
-		this._getProxyDocumentNode().body.style.overflow = 'hidden';
-
-		this._stylePauseOverlay(
-			this._getProxyDocumentNode().documentElement,
-			false,
-		);
-
-		setTimeout(() => {
-			const body =
+		// dummy one for rendering
+		// this._slideShowCanvas = this._createCanvas(
+		// 	undefined,
+		// 	window.screen.width,
+		// 	window.screen.height,
+		// );
+		const setu = () => {
+			const rootin =
 				this._getProxyDocumentNode().querySelector('#root-in-window');
-			this._presenterContainer = body.querySelector('#presenter-container');
-			this._slideShowCanvas = body.querySelector('canvas');
-			this._setupCanvas(this._slideShowCanvas);
-			this._slideShowCanvas.focus();
-		}, 500);
+			if (rootin) console.error('root ok');
+			this._presenterContainer = this._getProxyDocumentNode().querySelector('#presenter-container');
+			this._slideShowCanvas = this._getProxyDocumentNode().querySelector('#slideshow-canvas');
+			if (this._slideShowCanvas) {
+				this._setupCanvas(this._slideShowCanvas);
+				this._slideShowCanvas.focus();
+			} else {
+				setTimeout(setu, 2000);
+			}
+		};
+		setTimeout(setu, 2000);
 
 		this._slideShowWindowProxy.addEventListener(
 			'resize',
@@ -572,11 +543,22 @@ class SlideShowPresenter {
 			true,
 		);
 
+		window.addEventListener('message', () => {
+			this._slideShowNavigator.dispatchEffect();
+		});
+
 		this._windowCloseInterval = setInterval(
 			function () {
-				if (slideShowWindow.closed) {
-					this.slideshowWindowCleanUp();
+				if (!this._slideShowCanvas)
+					return;
+				const imga = this._slideShowCanvas.toDataURL();
+				if (imga) {
+					console.error('send message to slideshow');
+					this._slideShowWindowProxy.postMessage({message: imga});
 				}
+				// if (slideShowWindow.closed) {
+				// 	this.slideshowWindowCleanUp();
+				// }
 			}.bind(this),
 			500,
 		);
@@ -585,6 +567,11 @@ class SlideShowPresenter {
 			'beforeunload',
 			this.slideshowWindowCleanUp.bind(this),
 		);
+	}
+
+	createRenderingCanvas(canvasWidth: number, canvasHeight: number) {
+		console.error('canv: ' + canvasWidth + ' ' + canvasHeight + ' ' + !!((this._slideShowWindowProxy as any).offscreenC));
+		return (this._slideShowWindowProxy as any).offscreenC;
 	}
 
 	slideshowWindowCleanUp() {

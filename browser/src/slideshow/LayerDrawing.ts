@@ -82,6 +82,7 @@ interface LayerEntry {
 class LayerDrawing {
 	private map: any = null;
 	private helper: LayersCompositor;
+	private presenter: SlideShowPresenter;
 
 	private slideCache: SlideCache = new SlideCache();
 	private requestedSlideHash: string = null;
@@ -103,9 +104,10 @@ class LayerDrawing {
 	private onSlideRenderingCompleteCallback: VoidFunction = null;
 	private layerRenderer: LayerRenderer;
 
-	constructor(mapObj: any, helper: LayersCompositor) {
+	constructor(mapObj: any, helper: LayersCompositor, presenter: SlideShowPresenter) {
 		this.map = mapObj;
 		this.helper = helper;
+		this.presenter = presenter;
 	}
 
 	addHooks() {
@@ -234,10 +236,9 @@ class LayerDrawing {
 	}
 
 	private createRenderingCanvas() {
-		this.offscreenCanvas = new OffscreenCanvas(
-			this.canvasWidth,
-			this.canvasHeight,
-		);
+		// here
+		this.offscreenCanvas = this.presenter.createRenderingCanvas(this.canvasWidth,
+			this.canvasHeight,);
 
 		try {
 			this.layerRenderer = new LayerRendererGl(this.offscreenCanvas);

@@ -49,12 +49,35 @@ abstract class SlideRenderer {
 	protected _videos: VideoRenderInfo[] = [];
 	protected _canvas: HTMLCanvasElement;
 	protected _renderedSlideIndex: number = undefined;
-	protected _requestAnimationFrameId: number = null;
+	protected _requestAnimationFrameId: number | any = null;
 	protected _isAnyVideoPlaying: boolean = false;
 	private _activeLayers: Set<string> = new Set();
+	private _lastTime: number = Date.now();
 
 	constructor(canvas: HTMLCanvasElement) {
 		this._canvas = canvas;
+	}
+
+	fakeRequestAnimationFrame(callback: FrameRequestCallback) {
+		if (document.hidden) {
+			const now = Date.now();
+			if (now - this._lastTime > 100) {
+				this._lastTime = now;
+				callback(now);
+			} else
+				return setTimeout(() => { this.fakeRequestAnimationFrame(callback); }, 100);
+		} else {
+			return requestAnimationFrame(callback);
+		}
+		return 0;
+	}
+
+	fakeCancelAnimationFrame(frameId: number | any) {
+		if (document.hidden) {
+			clearTimeout(frameId);
+		} else {
+			cancelAnimationFrame(frameId);
+		}
 	}
 
 	public isDisposed() {
@@ -100,7 +123,7 @@ abstract class SlideRenderer {
 				videoRenderInfo.playing = true;
 				if (!this._isAnyVideoPlaying) {
 					this._isAnyVideoPlaying = true;
-					this._requestAnimationFrameId = requestAnimationFrame(
+					this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 						this.render.bind(this),
 					);
 				}
@@ -115,7 +138,7 @@ abstract class SlideRenderer {
 				for (const videoInfo of this._videos) {
 					if (videoInfo.playing) return;
 				}
-				cancelAnimationFrame(this._requestAnimationFrameId);
+				this.fakeCancelAnimationFrame(this._requestAnimationFrameId);
 				this._isAnyVideoPlaying = false;
 			},
 			true,
@@ -137,7 +160,7 @@ abstract class SlideRenderer {
 		this._renderedSlideIndex = slideInfo.indexInSlideShow;
 		this._slideTexture = currentSlideTexture;
 		this.prepareVideos(slideInfo, docWidth, docHeight);
-		requestAnimationFrame(this.render.bind(this));
+		this.fakeRequestAnimationFrame(this.render.bind(this));
 	}
 
 	public pauseVideos() {
@@ -190,7 +213,7 @@ abstract class SlideRenderer {
 		const isAnyLayerActive = this.isAnyLayerActive();
 		this._activeLayers.add(sId);
 		if (!isAnyLayerActive) {
-			this._requestAnimationFrameId = requestAnimationFrame(
+			this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 				this.render.bind(this),
 			);
 		}
@@ -275,7 +298,7 @@ class SlideRenderer2d extends SlideRenderer {
 		gl.setTransform(1, 0, 0, 1, 0, 0);
 
 		if (this.isAnyLayerActive() || this._isAnyVideoPlaying) {
-			this._requestAnimationFrameId = requestAnimationFrame(
+			this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 				this.render.bind(this),
 			);
 		}
@@ -527,7 +550,7 @@ class SlideRendererGl extends SlideRenderer {
 		}
 
 		if (this.isAnyLayerActive() || this._isAnyVideoPlaying)
-			this._requestAnimationFrameId = requestAnimationFrame(
+			this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 				this.render.bind(this),
 			);
 	}
