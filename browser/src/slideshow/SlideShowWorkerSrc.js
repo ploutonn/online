@@ -20,4 +20,5 @@ setInterval(() => {
 		console.debug('_requestPauseFrame from worker');
 	};
 	requestAnimationFrame(logRefresh);
+	opener.postMessage({ message: 'tick' });
 }, 16);

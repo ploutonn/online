@@ -227,7 +227,7 @@ abstract class SlideRenderer {
 		docHeight: number,
 	): void;
 
-	protected abstract render(timestamp: number): void;
+	public abstract render(timestamp: number): void;
 
 	public createEmptyTexture(): WebGLTexture | ImageBitmap {
 		return null;
@@ -298,7 +298,7 @@ class SlideRenderer2d extends SlideRenderer {
 		}
 	}
 
-	protected render(timestamp: number) {
+	public render(timestamp: number) {
 		if (this.isDisposed()) return;
 
 		console.debug(timestamp + ' SlideRenderer2d.render');
@@ -550,8 +550,14 @@ class SlideRendererGl extends SlideRenderer {
 		);
 	}
 
-	protected render(timestamp: number) {
-		if (this.isDisposed()) return;
+	public render(timestamp: number) {
+		if (
+			this.isDisposed() ||
+			!this._renderedSlideIndex ||
+			!this._slideTexture ||
+			!this._context
+		)
+			return;
 
 		console.debug(timestamp + ' SlideRendererGl.render');
 		const gl = this._context.getGl();

@@ -553,6 +553,16 @@ class SlideShowPresenter {
 			'beforeunload',
 			this.slideshowWindowCleanUp.bind(this),
 		);
+
+		window.addEventListener('message', this.postMessageHandler.bind(this));
+	}
+
+	postMessageHandler() {
+		console.error('postmsg');
+		if (this._slideRenderer && this._slideCompositor)
+			this._slideRenderer.fakeRequestAnimationFrame(
+				this._slideRenderer.render.bind(this._slideRenderer),
+			);
 	}
 
 	slideshowWindowCleanUp() {
