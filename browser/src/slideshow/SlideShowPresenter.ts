@@ -330,10 +330,14 @@ class SlideShowPresenter {
 
 	_createCanvas(parent: Element, width: number, height: number) {
 		const canvas = L.DomUtil.create('canvas', 'leaflet-slideshow2', parent);
-
 		canvas.id = 'slideshow-canvas';
+		this._setupCanvas(canvas);
+		return canvas;
+	}
+
+	_setupCanvas(canvas: HTMLCanvasElement) {
 		// set canvas styles
-		canvas.style.margin = 0;
+		canvas.style.margin = '0';
 		canvas.style.position = 'absolute';
 
 		canvas.addEventListener(
@@ -352,8 +356,6 @@ class SlideShowPresenter {
 		} catch (error) {
 			this._slideRenderer = new SlideRenderer2d(canvas);
 		}
-
-		return canvas;
 	}
 
 	exitSlideshowWithWarning(): boolean {
@@ -465,7 +467,6 @@ class SlideShowPresenter {
 	_doInWindowPresentation() {
 		const popupTitle =
 			_('Windowed Presentation: ') + this._map['wopi'].BaseFileName;
-		const htmlContent = this._generateSlideWindowHtml(popupTitle);
 
 		if (this._cypressSVGPresentationTest) {
 			this._slideShowWindowProxy = L.DomUtil.createWithId(
@@ -476,8 +477,16 @@ class SlideShowPresenter {
 			this._getProxyDocumentNode().open();
 			this._getProxyDocumentNode().write('<html><body></body></html>');
 			this._getProxyDocumentNode().close();
+
+			const htmlContent = this._generateSlideWindowHtml(popupTitle);
+			this._getProxyDocumentNode().documentElement.innerHTML = htmlContent;
+			this._getProxyDocumentNode().close();
 		} else {
-			this._slideShowWindowProxy = window.open('', '_blank', 'popup');
+			this._slideShowWindowProxy = window.open(
+				'./slideshow.html',
+				'_blank',
+				'popup',
+			);
 		}
 
 		if (!this._slideShowWindowProxy) {
@@ -485,9 +494,18 @@ class SlideShowPresenter {
 			return;
 		}
 
-		this._getProxyDocumentNode().documentElement.innerHTML = htmlContent;
-		this._getProxyDocumentNode().close();
+		this._slideShowWindowProxy.addEventListener(
+			'load',
+			this._slideShowWindowSetup.bind(this),
+		);
+	}
+
+	_slideShowWindowSetup() {
 		this._slideShowWindowProxy.focus();
+
+		const body = this._getProxyDocumentNode().querySelector('#root-in-window');
+		this._presenterContainer = body.querySelector('#presenter-container');
+		this._slideShowCanvas = body.querySelector('canvas');
 
 		// set body styles
 		this._getProxyDocumentNode().body.style.margin = '0';
@@ -495,12 +513,7 @@ class SlideShowPresenter {
 		this._getProxyDocumentNode().body.style.height = '100%';
 		this._getProxyDocumentNode().body.style.overflow = 'hidden';
 
-		const body = this._getProxyDocumentNode().querySelector('#root-in-window');
-		this._presenterContainer = this._createPresenterHTML(
-			body,
-			window.screen.width,
-			window.screen.height,
-		);
+		this._setupCanvas(this._slideShowCanvas);
 		this._slideShowCanvas.focus();
 
 		this._slideShowWindowProxy.addEventListener(
@@ -716,6 +729,9 @@ class SlideShowPresenter {
 
 		if (!this.getCanvas()) {
 			console.debug('onSlideShowInfo: no canvas available');
+			setTimeout(() => {
+				this.onSlideShowInfo(data);
+			}, 100);
 			return;
 		}
 

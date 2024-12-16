@@ -709,6 +709,7 @@ build-cool: \
 	$(DIST_FOLDER)/device-desktop.css \
 	$(DIST_FOLDER)/bundle.js \
 	$(DIST_FOLDER)/cool.html \
+	$(DIST_FOLDER)/slideshow.html \
 	$(WASM_FILES)
 	@echo "build cool completed"
 if ENABLE_ANDROIDAPP
@@ -789,6 +790,11 @@ $(DIST_FOLDER)/cool.html: $(srcdir)/html/cool.html.m4 \
 		-DGLOBAL_JS="$(DIST_FOLDER)/global.js" \
 		-DVENDOR="$(VENDOR)" \
 		$(srcdir)/html/cool.html.m4 > $@
+
+$(DIST_FOLDER)/slideshow.html: $(srcdir)/html/slideshow.html.m4
+		@echo "Generating slideshow.html..."
+		m4 -PE -I $(INTERMEDIATE_DIR) \
+		$(srcdir)/html/slideshow.html.m4 > $@
 
 node_modules: package.json archived-packages
 	@npm install

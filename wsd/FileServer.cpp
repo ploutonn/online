@@ -615,6 +615,7 @@ void FileServerRequestHandler::handleRequest(const HTTPRequest& request,
         }
 
         if (endPoint == "cool.html" ||
+            endPoint == "slideshow.html" ||
             endPoint == "help-localizations.json" ||
             endPoint == "localizations.json" ||
             endPoint == "locore-localizations.json" ||
