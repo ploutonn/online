@@ -49,12 +49,61 @@ abstract class SlideRenderer {
 	protected _videos: VideoRenderInfo[] = [];
 	protected _canvas: HTMLCanvasElement;
 	protected _renderedSlideIndex: number = undefined;
+
 	protected _requestAnimationFrameId: number = null;
+	protected _fakeRequestAnimationFrameId: any = null;
+	protected _inFakeFrameRequest: boolean = false;
 	protected _isAnyVideoPlaying: boolean = false;
 	private _activeLayers: Set<string> = new Set();
+	private _lastTime: number = performance.now();
 
 	constructor(canvas: HTMLCanvasElement) {
 		this._canvas = canvas;
+	}
+
+	fakeRequestAnimationFrame(callback: FrameRequestCallback) {
+		if (this._inFakeFrameRequest) return;
+		this._inFakeFrameRequest = true;
+
+		if (document.hidden) {
+			// main tab was hidden in the browser
+			const now = performance.now();
+			if (now - this._lastTime > 16) {
+				this._lastTime = now;
+				callback(now);
+
+				if (this._requestAnimationFrameId)
+					cancelAnimationFrame(this._requestAnimationFrameId);
+
+				this._requestAnimationFrameId = requestAnimationFrame(
+					(timestamp: number) => {
+						console.debug(timestamp + ' dummy requestAnimationFrame');
+					},
+				);
+			} else {
+				if (this._fakeRequestAnimationFrameId)
+					clearTimeout(this._fakeRequestAnimationFrameId);
+
+				this._fakeRequestAnimationFrameId = setTimeout(() => {
+					this.fakeRequestAnimationFrame(callback);
+					this._fakeRequestAnimationFrameId = null;
+				}, 1);
+			}
+		} else {
+			// main tab visible
+			return requestAnimationFrame(callback);
+		}
+
+		this._inFakeFrameRequest = false;
+		return 0;
+	}
+
+	fakeCancelAnimationFrame(frameId: number | any) {
+		if (document.hidden) {
+			clearTimeout(frameId);
+		} else {
+			cancelAnimationFrame(frameId);
+		}
 	}
 
 	public isDisposed() {
@@ -100,7 +149,7 @@ abstract class SlideRenderer {
 				videoRenderInfo.playing = true;
 				if (!this._isAnyVideoPlaying) {
 					this._isAnyVideoPlaying = true;
-					this._requestAnimationFrameId = requestAnimationFrame(
+					this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 						this.render.bind(this),
 					);
 				}
@@ -115,7 +164,7 @@ abstract class SlideRenderer {
 				for (const videoInfo of this._videos) {
 					if (videoInfo.playing) return;
 				}
-				cancelAnimationFrame(this._requestAnimationFrameId);
+				this.fakeCancelAnimationFrame(this._requestAnimationFrameId);
 				this._isAnyVideoPlaying = false;
 			},
 			true,
@@ -137,7 +186,7 @@ abstract class SlideRenderer {
 		this._renderedSlideIndex = slideInfo.indexInSlideShow;
 		this._slideTexture = currentSlideTexture;
 		this.prepareVideos(slideInfo, docWidth, docHeight);
-		requestAnimationFrame(this.render.bind(this));
+		this.fakeRequestAnimationFrame(this.render.bind(this));
 	}
 
 	public pauseVideos() {
@@ -176,7 +225,7 @@ abstract class SlideRenderer {
 		docHeight: number,
 	): void;
 
-	protected abstract render(): void;
+	protected abstract render(timestamp: number): void;
 
 	public createEmptyTexture(): WebGLTexture | ImageBitmap {
 		return null;
@@ -190,7 +239,7 @@ abstract class SlideRenderer {
 		const isAnyLayerActive = this.isAnyLayerActive();
 		this._activeLayers.add(sId);
 		if (!isAnyLayerActive) {
-			this._requestAnimationFrameId = requestAnimationFrame(
+			this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 				this.render.bind(this),
 			);
 		}
@@ -247,9 +296,10 @@ class SlideRenderer2d extends SlideRenderer {
 		}
 	}
 
-	protected render() {
+	protected render(timestamp: number) {
 		if (this.isDisposed()) return;
 
+		console.debug(timestamp + ' SlideRenderer2d.render');
 		const gl = this._context.get2dGl();
 		gl.clearRect(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -275,7 +325,7 @@ class SlideRenderer2d extends SlideRenderer {
 		gl.setTransform(1, 0, 0, 1, 0, 0);
 
 		if (this.isAnyLayerActive() || this._isAnyVideoPlaying) {
-			this._requestAnimationFrameId = requestAnimationFrame(
+			this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 				this.render.bind(this),
 			);
 		}
@@ -498,10 +548,10 @@ class SlideRendererGl extends SlideRenderer {
 		);
 	}
 
-	protected render() {
+	protected render(timestamp: number) {
 		if (this.isDisposed()) return;
 
-		console.debug('SlideRendererGl.render');
+		console.debug(timestamp + ' SlideRendererGl.render');
 		const gl = this._context.getGl();
 		gl.viewport(0, 0, this._canvas.width, this._canvas.height);
 		gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -527,7 +577,7 @@ class SlideRendererGl extends SlideRenderer {
 		}
 
 		if (this.isAnyLayerActive() || this._isAnyVideoPlaying)
-			this._requestAnimationFrameId = requestAnimationFrame(
+			this._requestAnimationFrameId = this.fakeRequestAnimationFrame(
 				this.render.bind(this),
 			);
 	}
