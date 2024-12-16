@@ -71,7 +71,7 @@ class PauseTimerGl extends StaticTextRenderer implements PauseTimer {
 		if (this.context.isDisposed()) return;
 
 		this.startTime = performance.now();
-		requestAnimationFrame(this.animate.bind(this));
+		this.fakeRequestAnimationFrame(this.animate.bind(this));
 	}
 
 	public stopTimer(): void {
@@ -90,7 +90,7 @@ class PauseTimerGl extends StaticTextRenderer implements PauseTimer {
 		this.textTexture = this.createTextTexture(this.getPauseTextContent());
 
 		this.render();
-		requestAnimationFrame(this.animate.bind(this));
+		this.fakeRequestAnimationFrame(this.animate.bind(this));
 
 		if (this.pauseTimeRemaining <= 0) {
 			this.onComplete();

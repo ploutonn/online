@@ -18,6 +18,7 @@ class TransitionParameters {
 	public next: WebGLTexture | ImageBitmap = null;
 	public transitionFilterInfo: TransitionFilterInfo = null;
 	public callback: VoidFunction = null;
+	public slideRenderer: SlideRenderer = null;
 }
 
 abstract class TransitionBase extends SlideChangeGl {
@@ -33,7 +34,7 @@ abstract class TransitionBase extends SlideChangeGl {
 	public startTransition(): void {
 		this.time = null;
 		this.isLastFrame = false;
-		this.requestAnimationFrameId = requestAnimationFrame(
+		this.requestAnimationFrameId = this.fakeRequestAnimationFrame(
 			this.animate.bind(this),
 		);
 	}

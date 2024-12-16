@@ -31,10 +31,53 @@ class CanvasLoader2d implements CanvasLoader {
 
 class CanvasLoaderGl extends TextureAnimationBase implements CanvasLoader {
 	private animationId: number | null = null;
+	protected _requestAnimationFrameId: number = null;
+	protected _fakeRequestAnimationFrameId: any = null;
+	protected _inFakeFrameRequest: boolean = false;
+	private _lastTime: number = performance.now();
 
 	constructor(canvasContext: RenderContextGl) {
 		super(canvasContext);
 		this.prepareTransition();
+	}
+
+	fakeRequestAnimationFrame(callback: FrameRequestCallback) {
+		if (document.hidden) {
+			// main tab was hidden in the browser
+
+			if (this._inFakeFrameRequest) return;
+			this._inFakeFrameRequest = true;
+
+			const now = performance.now();
+			if (now - this._lastTime > 16) {
+				this._lastTime = now;
+				callback(now);
+
+				if (this._requestAnimationFrameId)
+					cancelAnimationFrame(this._requestAnimationFrameId);
+
+				this._requestAnimationFrameId = requestAnimationFrame(
+					(timestamp: number) => {
+						console.debug(timestamp + ' dummy requestAnimationFrame');
+					},
+				);
+			} else {
+				if (this._fakeRequestAnimationFrameId)
+					clearTimeout(this._fakeRequestAnimationFrameId);
+
+				this._fakeRequestAnimationFrameId = setTimeout(() => {
+					this.fakeRequestAnimationFrame(callback);
+					this._fakeRequestAnimationFrameId = null;
+				}, 1);
+			}
+
+			this._inFakeFrameRequest = false;
+		} else {
+			// main tab visible
+			return requestAnimationFrame(callback);
+		}
+
+		return 0;
 	}
 
 	public renderUniformValue(): void {
@@ -106,7 +149,7 @@ class CanvasLoaderGl extends TextureAnimationBase implements CanvasLoader {
 
 		this.render();
 
-		this.animationId = requestAnimationFrame(this.animate);
+		this.animationId = this.fakeRequestAnimationFrame(this.animate);
 	};
 
 	public render(): void {

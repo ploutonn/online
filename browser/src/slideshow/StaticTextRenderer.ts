@@ -19,6 +19,10 @@ declare var SlideShow: any;
 
 class StaticTextRenderer extends TextureAnimationBase {
 	public textTexture: WebGLTexture;
+	protected _requestAnimationFrameId: number = null;
+	protected _fakeRequestAnimationFrameId: any = null;
+	protected _inFakeFrameRequest: boolean = false;
+	protected _lastTime: number = performance.now();
 
 	constructor(canvasContext: RenderContextGl) {
 		super(canvasContext);
@@ -29,16 +33,55 @@ class StaticTextRenderer extends TextureAnimationBase {
 
 		this.textTexture = this.createTextTexture(displayText);
 		this.prepareTransition();
-		requestAnimationFrame(this.animate.bind(this));
+		this.fakeRequestAnimationFrame(this.animate.bind(this));
 	}
 
 	public animate(): void {
-		requestAnimationFrame(this.render.bind(this));
+		this.fakeRequestAnimationFrame(this.render.bind(this));
 	}
 
 	public createTextTexture(displayText: string): WebGLTexture {
 		const textCanvas = this.create2DCanvasWithText(displayText);
 		return this.load2dCanvasToGlCanvas(textCanvas);
+	}
+
+	fakeRequestAnimationFrame(callback: FrameRequestCallback) {
+		if (document.hidden) {
+			// main tab was hidden in the browser
+
+			if (this._inFakeFrameRequest) return;
+			this._inFakeFrameRequest = true;
+
+			const now = performance.now();
+			if (now - this._lastTime > 16) {
+				this._lastTime = now;
+				callback(now);
+
+				if (this._requestAnimationFrameId)
+					cancelAnimationFrame(this._requestAnimationFrameId);
+
+				this._requestAnimationFrameId = requestAnimationFrame(
+					(timestamp: number) => {
+						console.debug(timestamp + ' dummy requestAnimationFrame');
+					},
+				);
+			} else {
+				if (this._fakeRequestAnimationFrameId)
+					clearTimeout(this._fakeRequestAnimationFrameId);
+
+				this._fakeRequestAnimationFrameId = setTimeout(() => {
+					this.fakeRequestAnimationFrame(callback);
+					this._fakeRequestAnimationFrameId = null;
+				}, 1);
+			}
+
+			this._inFakeFrameRequest = false;
+		} else {
+			// main tab visible
+			return requestAnimationFrame(callback);
+		}
+
+		return 0;
 	}
 
 	// Create an off-screen 2D canvas with text centered

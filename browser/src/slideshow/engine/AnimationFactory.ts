@@ -330,6 +330,7 @@ class TransitionFilterAnimation extends AnimationBase {
 		const transitionParameters = new TransitionParameters();
 		aAnimatedElement.setTransitionParameters(transitionParameters);
 		transitionParameters.transitionFilterInfo = transitionFilterInfo;
+		//transitionParameters.slideRenderer = this.slideRenderer; // needed?
 		return transitionParameters;
 	}
 

@@ -994,6 +994,7 @@ class SlideShowHandler {
 		transitionParameters.current = leavingSlideTexture;
 		transitionParameters.next = enteringSlideTexture;
 		transitionParameters.transitionFilterInfo = transitionFilterInfo;
+		transitionParameters.slideRenderer = this.slideRenderer;
 
 		return transitionParameters;
 	}

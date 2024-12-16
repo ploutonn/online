@@ -62,11 +62,12 @@ abstract class SlideRenderer {
 	}
 
 	fakeRequestAnimationFrame(callback: FrameRequestCallback) {
-		if (this._inFakeFrameRequest) return;
-		this._inFakeFrameRequest = true;
-
 		if (document.hidden) {
 			// main tab was hidden in the browser
+
+			if (this._inFakeFrameRequest) return;
+			this._inFakeFrameRequest = true;
+
 			const now = performance.now();
 			if (now - this._lastTime > 16) {
 				this._lastTime = now;
@@ -89,12 +90,13 @@ abstract class SlideRenderer {
 					this._fakeRequestAnimationFrameId = null;
 				}, 1);
 			}
+
+			this._inFakeFrameRequest = false;
 		} else {
 			// main tab visible
 			return requestAnimationFrame(callback);
 		}
 
-		this._inFakeFrameRequest = false;
 		return 0;
 	}
 

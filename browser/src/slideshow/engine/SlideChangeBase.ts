@@ -77,12 +77,51 @@ function SlideChangeTemplate<T extends AGConstructor<any>>(BaseType: T) {
 			}
 		}
 
+		fakeRequestAnimationFrame(callback: FrameRequestCallback) {
+			if (document.hidden) {
+				// main tab was hidden in the browser
+
+				if (this._inFakeFrameRequest) return;
+				this._inFakeFrameRequest = true;
+
+				const now = performance.now();
+				if (now - this._lastTime > 16) {
+					this._lastTime = now;
+					callback(now);
+
+					if (this._requestAnimationFrameId)
+						cancelAnimationFrame(this._requestAnimationFrameId);
+
+					this._requestAnimationFrameId = requestAnimationFrame(
+						(timestamp: number) => {
+							console.debug(timestamp + ' dummy requestAnimationFrame');
+						},
+					);
+				} else {
+					if (this._fakeRequestAnimationFrameId)
+						clearTimeout(this._fakeRequestAnimationFrameId);
+
+					this._fakeRequestAnimationFrameId = setTimeout(() => {
+						this.fakeRequestAnimationFrame(callback);
+						this._fakeRequestAnimationFrameId = null;
+					}, 1);
+				}
+
+				this._inFakeFrameRequest = false;
+			} else {
+				// main tab visible
+				return requestAnimationFrame(callback);
+			}
+
+			return 0;
+		}
+
 		protected animate() {
 			if (this.time !== null && this.time > 0.0) {
 				this.render(this.time);
 			}
 			if (!this.isLastFrame)
-				this.requestAnimationFrameId = requestAnimationFrame(
+				this.requestAnimationFrameId = this.fakeRequestAnimationFrame(
 					this.animate.bind(this),
 				);
 		}
