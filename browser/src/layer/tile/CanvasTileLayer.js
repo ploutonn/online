@@ -500,8 +500,8 @@ L.TileSectionManager = L.Class.extend({
 			newCenter = newTopLeftP.multiplyBy(app.dpiScale).add(paneBounds.getSize().subtract(splitPos).divideBy(2));
 		} else {
 			const newPaneCenter = new L.Point(
-				(docTopLeft.x - splitPos.x + (paneSize.x + splitPos.x) * 0.5 / scale),
-				(docTopLeft.y - splitPos.y + (paneSize.y + splitPos.y) * 0.5 / scale));
+				(docTopLeft.x - paneSize.x * 0.5 / scale),
+				(docTopLeft.y - paneSize.y * 0.5 / scale));
 			newCenter = this._map.rescale(newPaneCenter, this._map.getZoom(), newZoom);
 		}
 
