@@ -23,13 +23,13 @@
 #include <ClientSession.hpp>
 #include <common/JailUtil.hpp>
 #include <common/JsonUtil.hpp>
-#include <Poco/Base64Encoder.h>
 #include <CacheUtil.hpp>
 #include <Util.hpp>
 #include <ServerAuditUtil.hpp>
 
 #if !MOBILEAPP
 #include <wopi/CheckFileInfo.hpp>
+#include <Poco/Base64Encoder.h>
 #endif // !MOBILEAPP
 
 extern std::pair<std::shared_ptr<DocumentBroker>, std::string>
@@ -54,6 +54,19 @@ void sendLoadResult(const std::shared_ptr<ClientSession>& clientSession, bool su
         "commandresult: { \"command\": \"load\", \"success\": " + resultstr + ", \"result\": \"" +
         result + "\", \"errorMsg\": \"" + errorMsgFormatted + "\"}");
 }
+
+#if !MOBILEAPP
+
+std::string base64Encode(std::string& input)
+{
+    std::ostringstream oss;
+    Poco::Base64Encoder encoder(oss);
+    encoder << input;
+    encoder.close();
+    return oss.str();
+}
+
+#endif
 
 } // anonymous namespace
 
@@ -114,19 +127,6 @@ void RequestVettingStation::handleRequest(const std::string& id)
     }
 }
 
-#if !MOBILEAPP
-
-static std::string base64Encode(std::string& input)
-{
-    std::ostringstream oss;
-    Poco::Base64Encoder encoder(oss);
-    encoder << input;
-    encoder.close();
-    return oss.str();
-}
-
-#endif
-
 void RequestVettingStation::sendUnauthorizedErrorAndShutdown()
 {
     std::string error = "error: cmd=internal kind=unauthorized";
@@ -151,7 +151,7 @@ namespace
 class SharedSettings
 {
 public:
-    SharedSettings(const Poco::JSON::Object::Ptr wopiInfo)
+    SharedSettings(const Poco::JSON::Object::Ptr &wopiInfo)
     {
         if (auto settingsJSON = wopiInfo->getObject("SharedSettings"))
         {
@@ -188,7 +188,7 @@ void RequestVettingStation::launchInstallPresets()
     if (sharedSettings.getUri().empty())
         return;
 
-    std::string configId = sharedSettings.getConfigId();
+    const std::string &configId = sharedSettings.getConfigId();
 
     auto finishedCallback = [selfWeak = weak_from_this(), this, configId](bool success)
     {
