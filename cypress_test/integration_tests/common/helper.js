@@ -183,7 +183,7 @@ function loadDocumentNoIntegration(filePath, isMultiUser) {
 				}
 			});
 		}
-	}).then(function(win) {
+	}).then(function() {
 		if (Cypress.config('logServerResponse')) {
 			cy.getFrameWindow()
 				.its('L', {log: false})
