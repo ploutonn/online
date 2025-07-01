@@ -12,7 +12,7 @@ function showSidebar() {
 	cy.cGet('#sidebar-dock-wrapper').should('not.be.visible');
 	cy.cGet('#sidebar').click();
 	cy.cGet('#sidebar').should('have.class', 'selected');
-	cy.cGet('#sidebar-dock-wrapper').should('be.visible');
+	cy.cGet('#sidebar-dock-wrapper').should('be.visible').should('not.be.empty');
 
 	cy.log('<< showSidebar - end');
 }
@@ -23,7 +23,7 @@ function hideSidebar() {
 	cy.log('>> hideSidebar - start');
 
 	cy.cGet('#sidebar').should('have.class', 'selected');
-	cy.cGet('#sidebar-dock-wrapper').should('be.visible');
+	cy.cGet('#sidebar-dock-wrapper').should('be.visible').should('not.be.empty');
 	cy.cGet('#sidebar').click();
 	cy.cGet('#sidebar').should('not.have.class', 'selected');
 	cy.cGet('#sidebar-dock-wrapper').should('not.be.visible');
@@ -35,7 +35,7 @@ function hideSidebarImpress() {
 	cy.log('>> hideSidebarImpress - start');
 
 	cy.cGet('#modifypage').should('have.class', 'selected');
-	cy.cGet('#sidebar-dock-wrapper').should('be.visible');
+	cy.cGet('#sidebar-dock-wrapper').should('be.visible').should('not.be.empty');
 	cy.cGet('#modifypage button').click('left');
 	cy.cGet('#modifypage').should('not.have.class', 'selected');
 	cy.cGet('#sidebar-dock-wrapper').should('not.be.visible');
@@ -68,15 +68,14 @@ function showStatusBarIfHidden() {
 function showSidebarIfHidden() {
 	cy.log('>> showSidebarIfHidden - start');
 
-	cy.get('#sidebar')
-		.then(function(sidebarItem) {
-			if (!sidebarItem.hasClass('checked')) {
-				showSidebar();
-			}
-		});
+	cy.get('#sidebar-dock-wrapper')
+		.should('not.be.visible');
+
+	cy.get('#sidebar').should('not.have.class', 'checked');
+	showSidebar();
 
 	cy.get('#sidebar-dock-wrapper')
-		.should('be.visible');
+		.should('be.visible').should('not.be.empty');
 
 	cy.log('<< showSidebarIfHidden - end');
 }
@@ -85,12 +84,11 @@ function showSidebarIfHidden() {
 function hideSidebarIfVisible() {
 	cy.log('>> hideSidebarIfVisible - start');
 
-	cy.get('#sidebar')
-		.then(function(sidebarItem) {
-			if (sidebarItem.hasClass('checked')) {
-				hideSidebar();
-			}
-		});
+	cy.get('#sidebar-dock-wrapper')
+		.should('be.visible').should('not.be.empty');
+
+	cy.get('#sidebar').should('have.class', 'checked');
+	hideSidebar();
 
 	cy.get('#sidebar-dock-wrapper')
 		.should('not.be.visible');
