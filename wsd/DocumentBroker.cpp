@@ -1930,7 +1930,7 @@ DocumentBroker::asyncInstallPresets(const std::shared_ptr<SocketPoll>& poll, con
     httpSession->setFinishedHandler(std::move(finishedCallback));
 
     // Run the request on the WebServer Poll.
-    httpSession->asyncRequest(request, poll, true);
+    httpSession->asyncRequest(request, poll);
 
     return presetTasks;
 }
@@ -1987,7 +1987,7 @@ void DocumentBroker::asyncInstallPreset(
     httpSession->setFinishedHandler(std::move(finishedCallback));
 
     // Run the request on the WebServer Poll.
-    httpSession->asyncRequest(request, poll, true);
+    httpSession->asyncRequest(request, poll);
 
     const std::shared_ptr<http::Response> presetHttpResponse = httpSession->response();
 

@@ -444,7 +444,7 @@ void ClientSession::handleClipboardRequest(DocumentBroker::ClipboardRequest     
                             httpSession->setConnectFailHandler(std::move(connectFailCallback));
 
                             http::Request httpRequest(Poco::URI(url).getPathAndQuery());
-                            httpSession->asyncRequest(httpRequest, docBroker->getPoll(), true);
+                            httpSession->asyncRequest(httpRequest, docBroker->getPoll());
                         }
                         else
                         {
@@ -590,7 +590,7 @@ bool ClientSession::handleSignatureAction(const StringVector& tokens)
     httpRequest.setVerb(http::Request::VERB_POST);
     httpRequest.setBody(oss.str(), "application/json");
     std::shared_ptr<DocumentBroker> docBroker = getDocumentBroker();
-    httpSession->asyncRequest(httpRequest, docBroker->getPoll(), true);
+    httpSession->asyncRequest(httpRequest, docBroker->getPoll());
     return true;
 }
 #endif
@@ -1492,7 +1492,7 @@ void ClientSession::uploadBrowserSettingsToWopiHost()
     LOG_DBG("Uploading browsersetting json [" << jsonStream.str() << "] to wopiHost[" << uriAnonym
                                               << ']');
     httpSession->setFinishedHandler(std::move(finishedCallback));
-    httpSession->asyncRequest(httpRequest, COOLWSD::getWebServerPoll(), true);
+    httpSession->asyncRequest(httpRequest, COOLWSD::getWebServerPoll());
 }
 
 void ClientSession::updateBrowserSettingsJSON(const std::string& json)
