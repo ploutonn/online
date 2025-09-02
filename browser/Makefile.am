@@ -489,6 +489,7 @@ COOL_JS_LST =\
 	src/control/Control.NotebookbarDraw.js \
 	src/control/Control.NotebookbarBuilder.js \
 	src/control/Control.ContextToolbar.ts \
+	src/control/Control.ChartContextToolbar.ts \
 	src/control/Control.Layers.js \
 	src/control/Control.SidebarBase.ts \
 	src/control/Control.Sidebar.ts \
@@ -1032,6 +1033,7 @@ pot:
 		src/control/Control.NotebookbarImpress.js \
 		src/control/Control.NotebookbarWriter.js \
 		src/control/Control.ContextToolbar.ts \
+		src/control/Control.ChartContextToolbar.ts \
 		src/control/Control.PartsPreview.js \
 		src/control/Control.PresentationBar.js \
 		src/control/Control.SaveState.ts \

@@ -546,6 +546,7 @@ class UIManager extends L.Control {
 			}
 		});
 		this.map.contextToolbar = L.control.ContextToolbar(this.map);
+		this.map.chartContextToolbar = L.control.ChartContextToolbar(this.map);
 	}
 
 	/**

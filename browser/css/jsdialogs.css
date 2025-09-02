@@ -2551,3 +2551,17 @@ kbd,
 #ColorPage.jsdialog :is(#iconview_colors, #iconview_recent_colors).ui-iconview .ui-iconview-entry span {
 	font-size: 0; /* Hide placeholder text to prevent layout shifts in color palette iconview widgets due to lazy loading */
 }
+
+div [id^='themeview'] {
+	grid-template-columns: 1fr 1fr;
+	width: 420px;
+}
+div [id^='themeview'].one-child-popup {
+	grid-template-columns: 1fr;
+	width: 220px;
+}
+
+div [id^='themeview'].ui-iconview-entry {
+	width: 200px;
+	height: 146px
+}

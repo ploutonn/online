@@ -1007,6 +1007,10 @@ L.CanvasTileLayer = L.Layer.extend({
 		else if (textMsg.startsWith('graphicselection:')) {
 			this._map.fire('resettopbottompagespacing');
 			GraphicSelection.onMessage(textMsg);
+			if (!this._map.chartContextToolbar)
+				this.map.chartContextToolbar = L.control.ChartContextToolbar(this.map);
+			if (this._map.chartContextToolbar)
+				this._map.chartContextToolbar.showChartContextToolbar();
 		}
 		else if (textMsg.startsWith('graphicinnertextarea:')) {
 			return; // Not used.
@@ -2728,6 +2732,8 @@ L.CanvasTileLayer = L.Layer.extend({
 
 		if (this._map.contextToolbar)
 			this._map.contextToolbar.setLastInputEventType({input: "mouse", type: type});
+		if (this._map.chartContextToolbar)
+			this._map.chartContextToolbar.setLastInputEventType({input: "mouse", type: type});
 
 		app.socket.sendMessage('mouse type=' + type +
 				' x=' + x + ' y=' + y + ' count=' + count +
